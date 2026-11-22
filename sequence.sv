@@ -1,4 +1,4 @@
-/*class normal_add_seq extends uvm_sequence #(trans);
+class normal_add_seq extends uvm_sequence #(trans);
   `uvm_object_utils(normal_add_seq)
 
   function new(string name = "normal_add_seq");
@@ -30,10 +30,10 @@
   task body();
     repeat(5) send_cycle(8'h00, 8'h00);   // let reset settle
 
-    write_byte(8'h00);  // A low  (0x3E00)
-    write_byte(8'h3E);  // A high
-    write_byte(8'h80);  // B low  (0x4080)
-    write_byte(8'h40);  // B high
+    write_byte(8'hB7);  // A low  (0x3E00)
+    write_byte(8'h8B);  // A high
+    write_byte(8'h3C);  // B low  (0x4080)
+    write_byte(8'h14);  // B high
 
     // start, opcode=0 (ADD)
     send_cycle(8'h04, 8'h00);
@@ -43,7 +43,7 @@
     read_byte();   // expect 0x80
     read_byte();   // expect 0x43  -> result 0x4380 (3.75)
   endtask
-endclass*/
+endclass
 
 /*class normal_sub_seq extends uvm_sequence #(trans);
   `uvm_object_utils(normal_sub_seq)
@@ -93,9 +93,9 @@ endclass*/
     read_byte();   // expect 0x80 (result low byte)
     read_byte();   // expect 0x42 (result high byte) -> 0x4280 (3.25)
   endtask
-endclass*/
+endclass
 
-/*class negative_add_seq extends uvm_sequence #(trans);
+class negative_add_seq extends uvm_sequence #(trans);
   `uvm_object_utils(negative_add_seq)
 
   function new(string name = "negative_add_seq");
@@ -143,9 +143,9 @@ endclass*/
     read_byte();  // expect 0x80
     read_byte();  // expect 0xC3 -> result C380 (-3.75)
   endtask
-endclass*/
+endclass
 
-/*class mixed_sign_add_seq extends uvm_sequence #(trans);
+class mixed_sign_add_seq extends uvm_sequence #(trans);
   `uvm_object_utils(mixed_sign_add_seq)
 
   function new(string name = "mixed_sign_add_seq");
@@ -193,9 +193,9 @@ endclass*/
     read_byte();  // expect 0x80
     read_byte();  // expect 0x42 -> result 4280 (+3.25)
   endtask
-endclass*/
+endclass
 
-/*class mixed_sign_sub_seq extends uvm_sequence #(trans);
+class mixed_sign_sub_seq extends uvm_sequence #(trans);
   `uvm_object_utils(mixed_sign_sub_seq)
 
   function new(string name = "mixed_sign_sub_seq");
@@ -243,9 +243,9 @@ endclass*/
     read_byte();  // expect 0xC0
     read_byte();  // expect 0x47 -> result 47C0 (+7.75)
   endtask
-endclass*/
+endclass
 
-/*class positive_inf_seq extends uvm_sequence #(trans);
+class positive_inf_seq extends uvm_sequence #(trans);
   `uvm_object_utils(positive_inf_seq)
 
   function new(string name = "positive_inf_seq");
@@ -294,9 +294,9 @@ endclass*/
     // read_byte();
     // read_byte();
   endtask
-endclass*/
+endclass
 
-/*class nan_seq extends uvm_sequence #(trans);
+class nan_seq extends uvm_sequence #(trans);
   `uvm_object_utils(nan_seq)
 
   function new(string name = "nan_seq");
@@ -342,9 +342,9 @@ endclass*/
 
     // No result read required for error case unless specified.
   endtask
-endclass*/
+endclass
 
-/*class denormal_seq extends uvm_sequence #(trans);
+class denormal_seq extends uvm_sequence #(trans);
     `uvm_object_utils(denormal_seq)
     function new(string name="denormal_seq");
         super.new(name);
@@ -388,9 +388,9 @@ endclass*/
         repeat(12)
             send_cycle(8'h00, 8'h00);
     endtask
-endclass*/
+endclass
 
-/*class equal_sub_seq extends uvm_sequence #(trans);
+class equal_sub_seq extends uvm_sequence #(trans);
     `uvm_object_utils(equal_sub_seq)
     function new(string name="equal_sub_seq");
         super.new(name);
@@ -444,9 +444,9 @@ endclass*/
         read_byte();  // Expected low byte = 00
         read_byte();  // Expected high byte = 00
     endtask
-endclass*/
+endclass
 
-/*class random_normal_add_seq extends uvm_sequence #(trans);
+class random_normal_add_seq extends uvm_sequence #(trans);
     `uvm_object_utils(random_normal_add_seq)
     rand bit [15:0] operand_a;
     rand bit [15:0] operand_b;
@@ -517,7 +517,7 @@ endclass*/
             read_byte();
         end
     endtask
-endclass*/
+endclass
 
 class zero_minus_nonzero_seq extends uvm_sequence #(trans);
 
@@ -580,3 +580,507 @@ class zero_minus_nonzero_seq extends uvm_sequence #(trans);
     endtask
 
 endclass
+
+class start_before_operands_seq extends uvm_sequence #(trans);
+
+    `uvm_object_utils(start_before_operands_seq)
+
+    function new(string name="start_before_operands_seq");
+        super.new(name);
+    endfunction
+
+    task send_cycle(bit [7:0] control, bit [7:0] data);
+        trans req;
+
+        req = trans::type_id::create("req");
+        start_item(req);
+        req.ui_in  = control;
+        req.uio_in = data;
+        finish_item(req);
+    endtask
+
+    task write_byte(bit [7:0] data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h00, data);
+        send_cycle(8'h00, 8'h00);
+    endtask
+
+    task read_byte();
+        send_cycle(8'h02, 8'h00);
+        send_cycle(8'h02, 8'h00);
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+    endtask
+
+    task body();
+
+        // Initial idle
+        repeat(5)
+            send_cycle(8'h00, 8'h00);
+
+        // Assert START before loading operands
+        send_cycle(8'h04, 8'h00);
+        send_cycle(8'h04, 8'h00);
+
+        // Deassert START
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+
+        // Now load A = 1.5 (3E00)
+        write_byte(8'h00);
+        write_byte(8'h3E);
+
+        // Load B = 2.25 (4080)
+        write_byte(8'h80);
+        write_byte(8'h40);
+
+        // Assert START again after loading operands
+        send_cycle(8'h04, 8'h00);
+        send_cycle(8'h04, 8'h00);
+
+        // Wait for completion
+        repeat(12)
+            send_cycle(8'h00, 8'h00);
+
+        // Read result
+        read_byte();
+        read_byte();
+
+    endtask
+
+endclass
+
+class equal_exponent_add_seq extends uvm_sequence #(trans);
+
+    `uvm_object_utils(equal_exponent_add_seq)
+
+    function new(string name="equal_exponent_add_seq");
+        super.new(name);
+    endfunction
+
+    task send_cycle(bit [7:0] control, bit [7:0] data);
+        trans req;
+
+        req = trans::type_id::create("req");
+        start_item(req);
+        req.ui_in  = control;
+        req.uio_in = data;
+        finish_item(req);
+    endtask
+
+    task write_byte(bit [7:0] data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h00, data);
+        send_cycle(8'h00, 8'h00);
+    endtask
+
+    task read_byte();
+        send_cycle(8'h02, 8'h00);
+        send_cycle(8'h02, 8'h00);
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+    endtask
+
+    task body();
+
+        // Initial idle
+        repeat(5)
+            send_cycle(8'h00, 8'h00);
+
+        // Operand A = 3E00 (1.5)
+        write_byte(8'h00);
+        write_byte(8'h3E);
+
+        // Operand B = 3F00 (1.75)
+        write_byte(8'h00);
+        write_byte(8'h3F);
+
+        // Start ADD
+        send_cycle(8'h04, 8'h00);
+        send_cycle(8'h04, 8'h00);
+
+        // Wait for completion
+        repeat(12)
+            send_cycle(8'h00, 8'h00);
+
+        // Read result
+        read_byte();  // Expected 80
+        read_byte();  // Expected 42
+
+    endtask
+
+endclass
+
+class different_exponent_add_seq extends uvm_sequence #(trans);
+
+    `uvm_object_utils(different_exponent_add_seq)
+
+    function new(string name="different_exponent_add_seq");
+        super.new(name);
+    endfunction
+
+    task send_cycle(bit [7:0] control, bit [7:0] data);
+        trans req;
+
+        req = trans::type_id::create("req");
+        start_item(req);
+        req.ui_in  = control;
+        req.uio_in = data;
+        finish_item(req);
+    endtask
+
+    task write_byte(bit [7:0] data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h00, data);
+        send_cycle(8'h00, 8'h00);
+    endtask
+
+    task read_byte();
+        send_cycle(8'h02, 8'h00);
+        send_cycle(8'h02, 8'h00);
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+    endtask
+
+    task body();
+
+        // Initial idle
+        repeat(5)
+            send_cycle(8'h00, 8'h00);
+
+        // Operand A = 3E00 (1.5)
+        write_byte(8'h00);
+        write_byte(8'h3E);
+
+        // Operand B = 4400 (4.0)
+        write_byte(8'h00);
+        write_byte(8'h44);
+
+        // Start ADD
+        send_cycle(8'h04, 8'h00);
+        send_cycle(8'h04, 8'h00);
+
+        // Wait for completion
+        repeat(12)
+            send_cycle(8'h00, 8'h00);
+
+        // Read result
+        read_byte();  // Expected low byte = 80
+        read_byte();  // Expected high byte = 43
+
+    endtask
+
+endclass
+
+class carry_out_add_seq extends uvm_sequence #(trans);
+
+    `uvm_object_utils(carry_out_add_seq)
+
+    function new(string name="carry_out_add_seq");
+        super.new(name);
+    endfunction
+
+    task send_cycle(bit [7:0] control, bit [7:0] data);
+        trans req;
+
+        req = trans::type_id::create("req");
+        start_item(req);
+        req.ui_in  = control;
+        req.uio_in = data;
+        finish_item(req);
+    endtask
+
+    task write_byte(bit [7:0] data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h00, data);
+        send_cycle(8'h00, 8'h00);
+    endtask
+
+    task read_byte();
+        send_cycle(8'h02, 8'h00);
+        send_cycle(8'h02, 8'h00);
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+    endtask
+
+    task body();
+
+        // Initial idle
+        repeat(5)
+            send_cycle(8'h00, 8'h00);
+
+        // Operand A = 3E00 (1.5)
+        write_byte(8'h00);
+        write_byte(8'h3E);
+
+        // Operand B = 3E00 (1.5)
+        write_byte(8'h00);
+        write_byte(8'h3E);
+
+        // Start ADD
+        send_cycle(8'h04, 8'h00);
+        send_cycle(8'h04, 8'h00);
+
+        // Wait for completion
+        repeat(12)
+            send_cycle(8'h00, 8'h00);
+
+        // Read result
+        read_byte();  // Expected low byte = 00
+        read_byte();  // Expected high byte = 42
+
+    endtask
+
+endclass
+
+class exponent_overflow_add_seq extends uvm_sequence #(trans);
+
+    `uvm_object_utils(exponent_overflow_add_seq)
+
+    function new(string name="exponent_overflow_add_seq");
+        super.new(name);
+    endfunction
+
+    task send_cycle(bit [7:0] control, bit [7:0] data);
+        trans req;
+
+        req = trans::type_id::create("req");
+        start_item(req);
+        req.ui_in  = control;
+        req.uio_in = data;
+        finish_item(req);
+    endtask
+
+    task write_byte(bit [7:0] data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h00, data);
+        send_cycle(8'h00, 8'h00);
+    endtask
+
+    task read_byte();
+        send_cycle(8'h02, 8'h00);
+        send_cycle(8'h02, 8'h00);
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+    endtask
+
+    task body();
+
+        // Initial idle
+        repeat(5)
+            send_cycle(8'h00, 8'h00);
+
+        // Operand A = 7BFF
+        write_byte(8'hFF);
+        write_byte(8'h7B);
+
+        // Operand B = 7BFF
+        write_byte(8'hFF);
+        write_byte(8'h7B);
+
+        // Start ADD
+        send_cycle(8'h04, 8'h00);
+        send_cycle(8'h04, 8'h00);
+
+        // Wait for completion
+        repeat(12)
+            send_cycle(8'h00, 8'h00);
+
+        // Read result
+        read_byte();  // Expected low byte = 00
+        read_byte();  // Expected high byte = 7C
+
+    endtask
+
+endclass
+
+class underflow_sub_seq extends uvm_sequence #(trans);
+
+    `uvm_object_utils(underflow_sub_seq)
+
+    function new(string name="underflow_sub_seq");
+        super.new(name);
+    endfunction
+
+    task send_cycle(bit [7:0] control, bit [7:0] data);
+        trans req;
+
+        req = trans::type_id::create("req");
+        start_item(req);
+        req.ui_in  = control;
+        req.uio_in = data;
+        finish_item(req);
+    endtask
+
+    task write_byte(bit [7:0] data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h00, data);
+        send_cycle(8'h00, 8'h00);
+    endtask
+
+    task read_byte();
+        send_cycle(8'h02, 8'h00);
+        send_cycle(8'h02, 8'h00);
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+    endtask
+
+    task body();
+
+        // Initial idle
+        repeat(5)
+            send_cycle(8'h00, 8'h00);
+
+        // Operand A = 0401
+        write_byte(8'h01);
+        write_byte(8'h04);
+
+        // Operand B = 0400
+        write_byte(8'h00);
+        write_byte(8'h04);
+
+        // Start SUB
+        send_cycle(8'h0C, 8'h00);
+        send_cycle(8'h0C, 8'h00);
+
+        // Wait for completion
+        repeat(12)
+            send_cycle(8'h00, 8'h00);
+
+        // Read result
+        read_byte();  // Expected low byte = 00
+        read_byte();  // Expected high byte = 00
+
+    endtask
+
+endclass
+
+class max_normal_exponent_add_seq extends uvm_sequence #(trans);
+
+    `uvm_object_utils(max_normal_exponent_add_seq)
+
+    function new(string name="max_normal_exponent_add_seq");
+        super.new(name);
+    endfunction
+
+    task send_cycle(bit [7:0] control, bit [7:0] data);
+        trans req;
+
+        req = trans::type_id::create("req");
+        start_item(req);
+        req.ui_in  = control;
+        req.uio_in = data;
+        finish_item(req);
+    endtask
+
+    task write_byte(bit [7:0] data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h00, data);
+        send_cycle(8'h00, 8'h00);
+    endtask
+
+    task read_byte();
+        send_cycle(8'h02, 8'h00);
+        send_cycle(8'h02, 8'h00);
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+    endtask
+
+    task body();
+
+        // Initial idle
+        repeat(5)
+            send_cycle(8'h00, 8'h00);
+
+        // Operand A = 77FF
+        write_byte(8'hFF);
+        write_byte(8'h77);
+
+        // Operand B = 77FF
+        write_byte(8'hFF);
+        write_byte(8'h77);
+
+        // Start ADD
+        send_cycle(8'h04, 8'h00);
+        send_cycle(8'h04, 8'h00);
+
+        // Wait for completion
+        repeat(12)
+            send_cycle(8'h00, 8'h00);
+
+        // Read result
+        read_byte();
+        read_byte();
+
+    endtask
+
+endclass
+
+class leading_zero_sub_seq extends uvm_sequence #(trans);
+
+    `uvm_object_utils(leading_zero_sub_seq)
+
+    function new(string name="leading_zero_sub_seq");
+        super.new(name);
+    endfunction
+
+    task send_cycle(bit [7:0] control, bit [7:0] data);
+        trans req;
+
+        req = trans::type_id::create("req");
+        start_item(req);
+        req.ui_in  = control;
+        req.uio_in = data;
+        finish_item(req);
+    endtask
+
+    task write_byte(bit [7:0] data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h01, data);
+        send_cycle(8'h00, data);
+        send_cycle(8'h00, 8'h00);
+    endtask
+
+    task read_byte();
+        send_cycle(8'h02, 8'h00);
+        send_cycle(8'h02, 8'h00);
+        repeat(3)
+            send_cycle(8'h00, 8'h00);
+    endtask
+
+    task body();
+
+        // Initial idle
+        repeat(5)
+            send_cycle(8'h00, 8'h00);
+
+        // Operand A = 4000 (2.0)
+        write_byte(8'h00);
+        write_byte(8'h40);
+
+        // Operand B = 3E00 (1.5)
+        write_byte(8'h00);
+        write_byte(8'h3E);
+
+        // Start SUB
+        send_cycle(8'h0C, 8'h00);
+        send_cycle(8'h0C, 8'h00);
+
+        // Wait for completion
+        repeat(12)
+            send_cycle(8'h00, 8'h00);
+
+        // Read result = 3800
+        read_byte();  // Low byte = 00
+        read_byte();  // High byte = 38
+
+    endtask
+
+endclass*/
