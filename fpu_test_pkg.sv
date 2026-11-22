@@ -11,7 +11,7 @@ package fpu_test_pkg;
 	`include "output_monitor.sv"
 	`include "output_agent.sv"
 	`include "scoreboard.sv"
-	//`include "fpu_coverage.sv"
+	`include "fpu_coverage.sv"
 	`include "fpu_env.sv"
 	`include "sequence.sv"
 	`include "test.sv"
