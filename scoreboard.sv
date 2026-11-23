@@ -94,12 +94,12 @@ class scoreboard extends uvm_scoreboard;
     // zero handling: return the other operand; both zero -> A
     if (mag_a == 0 || mag_b == 0) begin
       special_flag = 1;
-      if (mag_b == 0)
+      if (mag_a==0 && mag_b == 0)
         result = a;
-      else if (mag_a == 0 && mag_b == 0)
-        result = a;
+      else if (mag_a == 0)
+        result = {sb_eff,b[14:0]};
       else
-        result = {(INVERT_B_SIGN_ON_ZERO_SUB ? sb_eff : b[15]), b[14:0]};
+        result = a;
       return;
     end
 
