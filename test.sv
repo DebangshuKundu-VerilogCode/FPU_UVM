@@ -44,7 +44,7 @@ class normal_add_test extends test;
   `uvm_component_utils(normal_add_test)
 
   normal_add_seq seq1;
-        /*normal_sub_seq seq2;
+        normal_sub_seq seq2;
         negative_add_seq seq3;
         mixed_sign_add_seq seq4;
         mixed_sign_sub_seq seq5;
@@ -53,7 +53,7 @@ class normal_add_test extends test;
         denormal_seq seq8;
         equal_sub_seq seq9;
         random_normal_add_seq seq10;
-        //zero_minus_nonzero_seq seq11;
+        zero_minus_nonzero_seq seq11;
         start_before_operands_seq seq12;
         equal_exponent_add_seq seq13;
         different_exponent_add_seq seq14;
@@ -61,8 +61,17 @@ class normal_add_test extends test;
         exponent_overflow_add_seq seq16;
         underflow_sub_seq seq17;
         max_normal_exponent_add_seq seq18;
-        leading_zero_sub_seq seq19;*/
-
+        leading_zero_sub_seq seq19;
+        we_re_sequence seq20;
+        random_normal_sub_seq seq21;
+  write_start_coverage_seq seq22;
+        ui_upper_nibble_seq seq23;
+        start_before_ready_seq seq24;
+        read_request_while_busy_seq seq25;
+        sub_start_low_seq seq26;
+        coverage_fix_seq seq27;
+        coverage_fix_seq2 seq28;
+        coverage_fix_seq3 seq29;
   function new(string name="normal_add_test",uvm_component parent=null);
 
     super.new(name,parent);
@@ -76,7 +85,7 @@ class normal_add_test extends test;
     seq1=normal_add_seq::type_id::create("seq1");
 
     seq1.start(env_h.inp_agt_h.seqr_h);
-                /*seq2=normal_sub_seq::type_id::create("seq2");
+                seq2=normal_sub_seq::type_id::create("seq2");
                 seq2.start(env_h.inp_agt_h.seqr_h);
                 seq3=negative_add_seq::type_id::create("seq3");
                 seq3.start(env_h.inp_agt_h.seqr_h);
@@ -94,8 +103,8 @@ class normal_add_test extends test;
                 seq9.start(env_h.inp_agt_h.seqr_h);
                 seq10=random_normal_add_seq::type_id::create("seq10");
                 seq10.start(env_h.inp_agt_h.seqr_h);
-                //seq11=zero_minus_nonzero_seq::type_id::create("seq11");
-                //seq11.start(env_h.inp_agt_h.seqr_h);
+                seq11=zero_minus_nonzero_seq::type_id::create("seq11");
+                seq11.start(env_h.inp_agt_h.seqr_h);
                 seq12=start_before_operands_seq::type_id::create("seq12");
                 seq12.start(env_h.inp_agt_h.seqr_h);
                 seq13=equal_exponent_add_seq::type_id::create("seq13");
@@ -112,8 +121,27 @@ class normal_add_test extends test;
                 seq18.start(env_h.inp_agt_h.seqr_h);
                 seq19=leading_zero_sub_seq::type_id::create("seq19");
                 seq19.start(env_h.inp_agt_h.seqr_h);
-                //#200ns;*/
-
+                //#200ns;
+                seq20=we_re_sequence::type_id::create("seq20");
+                seq20.start(env_h.inp_agt_h.seqr_h);
+    seq21=random_normal_sub_seq::type_id::create("seq21");
+                seq21.start(env_h.inp_agt_h.seqr_h);
+                seq22=write_start_coverage_seq::type_id::create("seq22");
+                seq22.start(env_h.inp_agt_h.seqr_h);
+                seq23=ui_upper_nibble_seq::type_id::create("seq23");
+                seq23.start(env_h.inp_agt_h.seqr_h);
+                seq24=start_before_ready_seq::type_id::create("seq24");
+                seq24.start(env_h.inp_agt_h.seqr_h);
+                seq25=read_request_while_busy_seq::type_id::create("seq25");
+                seq25.start(env_h.inp_agt_h.seqr_h);
+                seq26=sub_start_low_seq::type_id::create("seq26");
+                seq26.start(env_h.inp_agt_h.seqr_h);
+                seq27=coverage_fix_seq::type_id::create("seq27");
+                seq27.start(env_h.inp_agt_h.seqr_h);
+                seq28=coverage_fix_seq2::type_id::create("seq28");
+                seq28.start(env_h.inp_agt_h.seqr_h);
+                seq29=coverage_fix_seq3::type_id::create("seq29");
+                seq29.start(env_h.inp_agt_h.seqr_h);
     phase.drop_objection(this);
 
   endtask
